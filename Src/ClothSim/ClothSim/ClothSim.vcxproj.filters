@@ -4,9 +4,35 @@
     <ClCompile Include="clothsim.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="3dview.cpp" />
+    <ClCompile Include="cloth.cpp">
+      <Filter>cloth</Filter>
+    </ClCompile>
+    <ClCompile Include="constraint.cpp">
+      <Filter>cloth</Filter>
+    </ClCompile>
+    <ClCompile Include="particle.cpp">
+      <Filter>cloth</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="3dview.h" />
+    <ClInclude Include="cloth.h">
+      <Filter>cloth</Filter>
+    </ClInclude>
+    <ClInclude Include="cloth_definition.h">
+      <Filter>cloth</Filter>
+    </ClInclude>
+    <ClInclude Include="constraint.h">
+      <Filter>cloth</Filter>
+    </ClInclude>
+    <ClInclude Include="particle.h">
+      <Filter>cloth</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="cloth">
+      <UniqueIdentifier>{3ac2d291-0540-4134-81c5-1c93f38fb8cb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

@@ -8,6 +8,10 @@ using namespace framework;
 
 c3DView::c3DView(const string &name)
 	: framework::cDockWindow(name)
+	, m_ballPos(7,8,0)
+	, m_ballRadius(2)
+	, m_showGrid(true)
+	, m_timeStop(false)
 {
 }
 
@@ -18,11 +22,14 @@ c3DView::~c3DView()
 
 bool c3DView::Init(cRenderer &renderer)
 {
-	const Vector3 eyePos(100, 100, 100);
+	const Vector3 eyePos(30, 30, -30);
 	const Vector3 lookAt(0, 0, 0);
 	m_camera.SetCamera(eyePos, lookAt, Vector3(0, 1, 0));
 	m_camera.SetProjection(MATH_PI / 4.f, m_rect.Width() / m_rect.Height(), 1.f, 1000000.f);
 	m_camera.SetViewPort(m_rect.Width(), m_rect.Height());
+
+	GetMainLight().Init(graphic::cLight::LIGHT_DIRECTIONAL);
+	GetMainLight().SetDirection(Vector3(-1, -1, 1).Normal());
 
 	sf::Vector2u size((u_int)m_rect.Width() - 15, (u_int)m_rect.Height() - 50);
 	cViewport vp = renderer.m_viewPort;
@@ -32,6 +39,13 @@ bool c3DView::Init(cRenderer &renderer)
 		, DXGI_FORMAT_D24_UNORM_S8_UINT);
 
 	m_gridLine.Create(renderer, 100, 100, 1, 1);
+
+	m_cloth1.Init(renderer, 14.f, 10.f, 55, 45);
+	m_sphere.Create(renderer, m_ballRadius - 0.01f, 30, 30);
+	m_sphere.m_mtrl.Init(
+		Vector4(0.2f, 0.2f, 0.2f, 1)
+		, Vector4(0.4f, 0.4f, 1.f, 1)
+		, Vector4(1, 1, 1, 1));
 
 	return true;
 }
@@ -55,7 +69,27 @@ void c3DView::OnPreRender(const float deltaSeconds)
 	if (m_renderTarget.Begin(renderer))
 	{
 		CommonStates states(renderer.GetDevice());
-		m_gridLine.Render(renderer);
+		renderer.GetDevContext()->RSSetState(states.CullNone());
+
+		if (m_showGrid)
+			m_gridLine.Render(renderer);
+
+		const float dt = deltaSeconds * 5.f * (m_timeStop? 0.f : 1.f);
+		static float incT = 0.f;
+		incT += dt * 0.2f;
+		m_ballPos.z = (float)cos(incT) * 7.f;
+
+		m_sphere.m_transform.pos = m_ballPos;
+		m_sphere.Render(renderer);
+
+		m_cloth1.addForce(Vector3(0, -0.2f, 0) * dt); // add gravity each frame, pointing down
+		m_cloth1.windForce(Vector3(0.5f, 0, -0.2f) * dt); // generate some wind each frame
+		m_cloth1.timeStep(); // calculate the particle positions of the next frame
+		m_cloth1.ballCollision(m_ballPos, m_ballRadius); // resolve collision with the ball
+		m_cloth1.drawShaded(renderer); // finally draw the cloth with smooth shading
+
+		renderer.RenderAxis();
+		renderer.GetDevContext()->RSSetState(states.CullCounterClockwise());
 	}
 	m_renderTarget.End(renderer);
 }
@@ -83,6 +117,7 @@ void c3DView::OnRender(const float deltaSeconds)
 	if (ImGui::Begin("Map Information", &isOpen, flags))
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Checkbox("grid", &m_showGrid);
 		ImGui::End();
 	}
 
@@ -243,6 +278,7 @@ void c3DView::OnEventProc(const sf::Event &evt)
 		case sf::Keyboard::Return:
 			break;
 		case sf::Keyboard::Space:
+			m_timeStop = !m_timeStop;
 			break;
 		}
 		break;

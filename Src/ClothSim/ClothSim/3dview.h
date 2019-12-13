@@ -31,6 +31,14 @@ protected:
 public:
 	graphic::cRenderTarget m_renderTarget;
 	graphic::cGridLine m_gridLine;
+	graphic::cSphere m_sphere;
+
+	cCloth m_cloth1;
+	Vector3 m_ballPos;
+	float m_ballRadius;
+
+	bool m_timeStop;
+	bool m_showGrid;
 
 	// MouseMove Variable
 	POINT m_viewPos;
@@ -40,4 +48,3 @@ public:
 	bool m_mouseDown[3]; // Left, Right, Middle
 	float m_rotateLen;
 };
-
