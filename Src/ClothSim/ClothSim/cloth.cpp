@@ -98,13 +98,13 @@ bool cCloth::Init(graphic::cRenderer &renderer
 			cParticle *p4 = p + (y + 1) * m_num_particles_width + x + 1;
 
 			if (x < num_particles_width0 - 1)
-				makeConstraint(p1, p2);
+				MakeConstraint(p1, p2);
 			if (y < num_particles_height0 - 1)
-				makeConstraint(p1, p3);
+				MakeConstraint(p1, p3);
 			if (x < num_particles_width0 - 1 && y < num_particles_height0 - 1)
-				makeConstraint(p1, p4);
+				MakeConstraint(p1, p4);
 			if (x < num_particles_width0 - 1 && y < num_particles_height0 - 1)
-				makeConstraint(p2, p3);
+				MakeConstraint(p2, p3);
 		}
 	}
 
@@ -119,13 +119,13 @@ bool cCloth::Init(graphic::cRenderer &renderer
 			cParticle *p4 = p + (y + 2) * m_num_particles_width + x + 2;
 
 			if (x < num_particles_width0 - 2)
-				makeConstraint(p1, p2);
+				MakeConstraint(p1, p2);
 			if (y < num_particles_height0 - 2)
-				makeConstraint(p1, p3);
+				MakeConstraint(p1, p3);
 			if (x < num_particles_width0 - 2 && y < num_particles_height0 - 2)
-				makeConstraint(p1, p4);
+				MakeConstraint(p1, p4);
 			if (x < num_particles_width0 - 2 && y < num_particles_height0 - 2)
-				makeConstraint(p2, p3);
+				MakeConstraint(p2, p3);
 		}
 	}
 
@@ -134,13 +134,13 @@ bool cCloth::Init(graphic::cRenderer &renderer
 	{
 		// moving the particle a bit towards the center, to make it hang more natural 
 		// - because I like it ;)
-		getParticle(0 + i, 0)->offsetPos(Vector3(0.5, 0.0, 0.0));
-		getParticle(0 + i, 0)->makeUnmovable();
+		GetParticle(0 + i, 0)->OffsetPos(Vector3(0.5, 0.0, 0.0));
+		GetParticle(0 + i, 0)->MakeUnmovable();
 
 		// moving the particle a bit towards the center, to make it hang more natural 
 		// - because I like it ;)
-		getParticle(0 + i, 0)->offsetPos(Vector3(-0.5, 0.0, 0.0));
-		getParticle(num_particles_width0 - 1 - i, 0)->makeUnmovable();
+		GetParticle(0 + i, 0)->OffsetPos(Vector3(-0.5, 0.0, 0.0));
+		GetParticle(num_particles_width0 - 1 - i, 0)->MakeUnmovable();
 	}
 
 	return true;
@@ -161,13 +161,13 @@ bool cCloth::Init(graphic::cRenderer &renderer
 //         |/ |
 // (p3,p6) *--* (p4,p5)
 //
-void cCloth::drawShaded(graphic::cRenderer &renderer)
+void cCloth::DrawShaded(graphic::cRenderer &renderer)
 {
 	// reset normals (which where written to last frame)
 	{
 		cParticle *p = &m_particles[0];
 		for (uint i = 0; i < m_particles.size(); ++i)
-			p++->accumulated_normal = Vector3(0, 0, 0);
+			p++->m_accumulated_normal = Vector3(0, 0, 0);
 	}
 
 	// create smooth per particle normals by adding up
@@ -181,18 +181,18 @@ void cCloth::drawShaded(graphic::cRenderer &renderer)
 				cParticle *p1 = p + y * m_num_particles_width + x;
 				cParticle *p2 = p + y * m_num_particles_width + x + 1;
 				cParticle *p3 = p + (y + 1) * m_num_particles_width + x;
-				Vector3 normal = calcTriangleNormal(p1, p2, p3).Normal();
-				p1->accumulated_normal += normal;
-				p2->accumulated_normal += normal;
-				p3->accumulated_normal += normal;
+				Vector3 normal = CalcTriangleNormal(p1, p2, p3).Normal();
+				p1->m_accumulated_normal += normal;
+				p2->m_accumulated_normal += normal;
+				p3->m_accumulated_normal += normal;
 
 				cParticle *p4 = p + y * m_num_particles_width + x + 1;
 				cParticle *p5 = p + (y + 1) * m_num_particles_width + x + 1;
 				cParticle *p6 = p + (y + 1) * m_num_particles_width + x;
-				Vector3 normal2 = calcTriangleNormal(p4, p5, p6).Normal();
-				p4->accumulated_normal += normal2;
-				p5->accumulated_normal += normal2;
-				p6->accumulated_normal += normal2;
+				Vector3 normal2 = CalcTriangleNormal(p4, p5, p6).Normal();
+				p4->m_accumulated_normal += normal2;
+				p5->m_accumulated_normal += normal2;
+				p6->m_accumulated_normal += normal2;
 			}
 		}
 	}
@@ -217,9 +217,9 @@ void cCloth::drawShaded(graphic::cRenderer &renderer)
 				cParticle *p5 = p + (y + 1) * m_num_particles_width + x + 1;
 				cParticle *p6 = p + (y + 1) * m_num_particles_width + x;
 
-				drawTriangle(pb, p1, p2, p3, color);
+				DrawTriangle(pb, p1, p2, p3, color);
 				pb += (m_vertexStride * 3);
-				drawTriangle(pb, p4, p5, p6, color);
+				DrawTriangle(pb, p4, p5, p6, color);
 				pb += (m_vertexStride * 3);
 			}
 		}
@@ -262,27 +262,27 @@ void cCloth::drawShaded(graphic::cRenderer &renderer)
 // this is an important methods where the time is progressed one time step for the entire cloth.
 // This includes calling satisfyConstraint() for every constraint, 
 // and calling timeStep() for all particles
-void cCloth::timeStep()
+void cCloth::TimeStep()
 {
 	for (int i = 0; i < CONSTRAINT_ITERATIONS; i++) // iterate over all constraints several times
 	{
 		cConstraint *p = &m_constraints[0];
 		for (uint i=0; i < m_constraints.size(); ++i)
-			p++->satisfyConstraint(); // satisfy constraint.
+			p++->SatisfyConstraint(); // satisfy constraint.
 	}
 
 	cParticle *p = &m_particles[0];
 	for (uint i=0; i < m_particles.size(); ++i)
-		p++->timeStep(); // calculate the position of each particle at the next time step.
+		p++->TimeStep(); // calculate the position of each particle at the next time step.
 }
 
 
 // used to add gravity (or any other arbitrary vector) to all particles
-void cCloth::addForce(const Vector3 &direction)
+void cCloth::AddForce(const Vector3 &direction)
 {
 	cParticle *p = &m_particles[0];
 	for (uint i=0; i < m_particles.size(); ++i)
-		p++->addForce(direction);
+		p++->AddForce(direction);
 }
 
 
@@ -297,7 +297,7 @@ void cCloth::addForce(const Vector3 &direction)
 //         | /|
 //         |/ |
 // (p3,p6) *--* (p4,p5)
-void cCloth::windForce(const Vector3 &direction)
+void cCloth::WindForce(const Vector3 &direction)
 {
 	cParticle *p = &m_particles[0];
 	for (int x = 0; x < m_num_particles_width - 1; x++)
@@ -311,8 +311,8 @@ void cCloth::windForce(const Vector3 &direction)
 			cParticle *p5 = p + (y + 1) * m_num_particles_width + x + 1;
 			cParticle *p6 = p + (y + 1) * m_num_particles_width + x;
 
-			addWindForcesForTriangle(p1, p2, p3, direction);
-			addWindForcesForTriangle(p4, p5, p6, direction);
+			AddWindForcesForTriangle(p1, p2, p3, direction);
+			AddWindForcesForTriangle(p4, p5, p6, direction);
 		}
 	}
 }
@@ -323,35 +323,35 @@ void cCloth::windForce(const Vector3 &direction)
 // is simply compared to the sphere and corrected.
 // This also means that the sphere can "slip through" if the ball is small 
 // enough compared to the distance in the grid bewteen particles
-void cCloth::ballCollision(const Vector3 &center, const float radius)
+void cCloth::BallCollision(const Vector3 &center, const float radius)
 {
 	cParticle *p = &m_particles[0];
 	for (uint i=0; i < m_particles.size(); ++i)
 	{
-		Vector3 v = p->pos - center;
+		Vector3 v = p->m_pos - center;
 		float l = v.Length();
 		if (v.Length() < radius) // if the particle is inside the ball
 		{
 			// project the particle to the surface of the ball
-			p->offsetPos(v.Normal()*(radius - l));
+			p->OffsetPos(v.Normal()*(radius - l));
 		}
 		++p;
 	}
 }
 
 
-void cCloth::doFrame()
+void cCloth::DoFrame()
 {
 }
 
 
-cParticle* cCloth::getParticle(int x, int y) 
+cParticle* cCloth::GetParticle(int x, int y) 
 { 
 	return &m_particles[y*m_num_particles_width + x];
 }
 
 
-void cCloth::makeConstraint(cParticle *p1, cParticle *p2) 
+void cCloth::MakeConstraint(cParticle *p1, cParticle *p2) 
 { 
 	m_constraints.push_back(cConstraint(p1, p2)); 
 }
@@ -361,11 +361,11 @@ void cCloth::makeConstraint(cParticle *p1, cParticle *p2)
 // normal vector of the triangle defined by the position of the particles p1, p2, and p3.
 // The magnitude of the normal vector is equal to the area of 
 // the parallelogram defined by p1, p2 and p3
-Vector3 cCloth::calcTriangleNormal(cParticle *p1, cParticle *p2, cParticle *p3)
+Vector3 cCloth::CalcTriangleNormal(cParticle *p1, cParticle *p2, cParticle *p3)
 {
-	const Vector3 &pos1 = p1->pos;
-	const Vector3 &pos2 = p2->pos;
-	const Vector3 &pos3 = p3->pos;
+	const Vector3 &pos1 = p1->m_pos;
+	const Vector3 &pos2 = p2->m_pos;
+	const Vector3 &pos3 = p3->m_pos;
 
 	Vector3 v1 = pos2 - pos1;
 	Vector3 v2 = pos3 - pos1;
@@ -376,40 +376,40 @@ Vector3 cCloth::calcTriangleNormal(cParticle *p1, cParticle *p2, cParticle *p3)
 
 // A private method used by windForce() to calcualte the wind force for a single triangle
 // defined by p1,p2,p3
-void cCloth::addWindForcesForTriangle(cParticle *p1, cParticle *p2, cParticle *p3
+void cCloth::AddWindForcesForTriangle(cParticle *p1, cParticle *p2, cParticle *p3
 	, const Vector3 direction)
 {
-	Vector3 normal = calcTriangleNormal(p1, p2, p3);
+	Vector3 normal = CalcTriangleNormal(p1, p2, p3);
 	Vector3 d = normal.Normal();
 	Vector3 force = normal * (d.DotProduct(direction));
-	p1->addForce(force);
-	p2->addForce(force);
-	p3->addForce(force);
+	p1->AddForce(force);
+	p2->AddForce(force);
+	p3->AddForce(force);
 }
 
 
 // A private method used by drawShaded(), that draws a single triangle p1,p2,p3 with a color
-void cCloth::drawTriangle(BYTE *p
+void cCloth::DrawTriangle(BYTE *p
 	, cParticle *p1, cParticle *p2, cParticle *p3, const Vector3 color)
 {
-	*(Vector3*)(p + m_posOffset) = p1->pos;
-	*(Vector3*)(p + m_normOffset) = p1->accumulated_normal.Normal();
+	*(Vector3*)(p + m_posOffset) = p1->m_pos;
+	*(Vector3*)(p + m_normOffset) = p1->m_accumulated_normal.Normal();
 	*(Vector4*)(p + m_colorOffset) = color;
 	p += m_vertexStride;
 
-	*(Vector3*)(p + m_posOffset) = p2->pos;
-	*(Vector3*)(p + m_normOffset) = p2->accumulated_normal.Normal();
+	*(Vector3*)(p + m_posOffset) = p2->m_pos;
+	*(Vector3*)(p + m_normOffset) = p2->m_accumulated_normal.Normal();
 	*(Vector4*)(p + m_colorOffset) = color;
 	p += m_vertexStride;
 
-	*(Vector3*)(p + m_posOffset) = p3->pos;
-	*(Vector3*)(p + m_normOffset) = p3->accumulated_normal.Normal();
+	*(Vector3*)(p + m_posOffset) = p3->m_pos;
+	*(Vector3*)(p + m_normOffset) = p3->m_accumulated_normal.Normal();
 	*(Vector4*)(p + m_colorOffset) = color;
 	p += m_vertexStride;
 }
 
 
-int cCloth::getIndex(int x, int y)
+int cCloth::GetIndex(int x, int y)
 {
 	return y * m_num_particles_width + x;
 }

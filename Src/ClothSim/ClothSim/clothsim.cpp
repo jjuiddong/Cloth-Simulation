@@ -30,7 +30,7 @@ cViewer::cViewer()
 	graphic::cResourceManager::Get()->SetMediaDirectory("./media/");
 
 	m_windowName = L"Cloth Simulation";
-	m_isLazyMode = false;
+	m_isLazyMode = true;
 	const RECT r = { 0, 0, 1024, 768 };
 	//const RECT r = { 0, 0, 1280, 960 };
 	m_windowRect = r;

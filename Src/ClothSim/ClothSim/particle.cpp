@@ -4,12 +4,12 @@
 
 
 cParticle::cParticle(const Vector3 &pos)
-	: pos(pos)
-	, old_pos(pos)
-	, acceleration(Vector3(0, 0, 0))
-	, mass(1)
-	, movable(true)
-	, accumulated_normal(Vector3(0, 0, 0))
+	: m_pos(pos)
+	, m_oldPos(pos)
+	, m_acceleration(Vector3(0, 0, 0))
+	, m_mass(1)
+	, m_movable(true)
+	, m_accumulated_normal(Vector3(0, 0, 0))
 {
 }
 
@@ -18,39 +18,39 @@ cParticle::cParticle()
 }
 
 
-void cParticle::addForce(const Vector3 &f)
+void cParticle::AddForce(const Vector3 &f)
 {
-	acceleration += f / mass;
+	m_acceleration += f / m_mass;
 }
 
 
 //  This is one of the important methods, where the time is progressed a single step size (TIME_STEPSIZE)
 //   The method is called by Cloth.time_step()
 //   Given the equation "force = mass * acceleration" the next position is found through verlet integration
-void cParticle::timeStep()
+void cParticle::TimeStep()
 {
-	if (movable)
+	if (m_movable)
 	{
-		Vector3 temp = pos;
-		pos = pos + (pos - old_pos)*(1.0f - DAMPING) 
-			+ acceleration * TIME_STEPSIZE2;
-		old_pos = temp;
+		Vector3 temp = m_pos;
+		m_pos = m_pos + (m_pos - m_oldPos)*(1.0f - DAMPING) 
+			+ m_acceleration * TIME_STEPSIZE2;
+		m_oldPos = temp;
 
 		// acceleration is reset since it HAS been translated 
 		// into a change in position (and implicitely into velocity)	
-		acceleration = Vector3(0, 0, 0);
+		m_acceleration = Vector3(0, 0, 0);
 	}
 }
 
 
-void cParticle::offsetPos(const Vector3 &v)
+void cParticle::OffsetPos(const Vector3 &v)
 { 
-	if (movable)
-		pos += v; 
+	if (m_movable)
+		m_pos += v; 
 }
 
 
-void cParticle::makeUnmovable() 
+void cParticle::MakeUnmovable() 
 { 
-	movable = false; 
+	m_movable = false;
 }

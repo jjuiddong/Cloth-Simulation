@@ -8,8 +8,8 @@ using namespace framework;
 
 c3DView::c3DView(const string &name)
 	: framework::cDockWindow(name)
-	, m_ballPos(7,8,0)
-	, m_ballRadius(2)
+	, m_ballPos(7,11,0)
+	, m_ballRadius(1.8f)
 	, m_showGrid(true)
 	, m_timeStop(false)
 {
@@ -74,7 +74,7 @@ void c3DView::OnPreRender(const float deltaSeconds)
 		if (m_showGrid)
 			m_gridLine.Render(renderer);
 
-		const float dt = deltaSeconds * 5.f * (m_timeStop? 0.f : 1.f);
+		const float dt = deltaSeconds * 4.f * (m_timeStop? 0.f : 1.f);
 		static float incT = 0.f;
 		incT += dt * 0.2f;
 		m_ballPos.z = (float)cos(incT) * 7.f;
@@ -82,11 +82,11 @@ void c3DView::OnPreRender(const float deltaSeconds)
 		m_sphere.m_transform.pos = m_ballPos;
 		m_sphere.Render(renderer);
 
-		m_cloth1.addForce(Vector3(0, -0.2f, 0) * dt); // add gravity each frame, pointing down
-		m_cloth1.windForce(Vector3(0.5f, 0, -0.2f) * dt); // generate some wind each frame
-		m_cloth1.timeStep(); // calculate the particle positions of the next frame
-		m_cloth1.ballCollision(m_ballPos, m_ballRadius); // resolve collision with the ball
-		m_cloth1.drawShaded(renderer); // finally draw the cloth with smooth shading
+		m_cloth1.AddForce(Vector3(0, -0.2f, 0) * dt); // add gravity each frame, pointing down
+		m_cloth1.WindForce(Vector3(0.5f, 0, -0.2f) * dt); // generate some wind each frame
+		m_cloth1.TimeStep(); // calculate the particle positions of the next frame
+		m_cloth1.BallCollision(m_ballPos, m_ballRadius); // resolve collision with the ball
+		m_cloth1.DrawShaded(renderer); // finally draw the cloth with smooth shading
 
 		renderer.RenderAxis();
 		renderer.GetDevContext()->RSSetState(states.CullCounterClockwise());
