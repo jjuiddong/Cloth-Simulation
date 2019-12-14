@@ -181,7 +181,6 @@
   <ItemGroup>
     <ClInclude Include="3dview.h" />
     <ClInclude Include="cloth.h" />
-    <ClInclude Include="cloth_definition.h" />
     <ClInclude Include="constraint.h" />
     <ClInclude Include="particle.h" />
     <ClInclude Include="stdafx.h" />

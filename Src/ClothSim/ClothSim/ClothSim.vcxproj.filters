@@ -20,9 +20,6 @@
     <ClInclude Include="cloth.h">
       <Filter>cloth</Filter>
     </ClInclude>
-    <ClInclude Include="cloth_definition.h">
-      <Filter>cloth</Filter>
-    </ClInclude>
     <ClInclude Include="constraint.h">
       <Filter>cloth</Filter>
     </ClInclude>

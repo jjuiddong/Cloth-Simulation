@@ -12,7 +12,6 @@ using common::Vector3;
 using common::Vector2;
 using common::sRectf;
 
-#include "cloth_definition.h"
 #include "particle.h"
 #include "constraint.h"
 #include "cloth.h"

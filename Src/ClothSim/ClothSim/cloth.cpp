@@ -4,6 +4,7 @@
 
 
 cCloth::cCloth()
+	: m_iterationCount(15)
 {
 }
 
@@ -14,14 +15,20 @@ cCloth::~cCloth()
 
 
 // This is a important constructor for the entire system of particles and constraints
+// col: num particles width
+// row: num particles height
 bool cCloth::Init(graphic::cRenderer &renderer
-	, float width, float height, int num_particles_width0, int num_particles_height0)
+	, float width, float height, int col, int row
+	, int iterationCount)
 {
+	m_col = col;
+	m_row = row;
+	m_iterationCount = iterationCount;
 
 	// create vertex, index buffer
 	{
-		const int vertexCnt = num_particles_width0 * num_particles_height0;
-		const int cellCnt = (num_particles_width0 - 1) * (num_particles_height0 - 1);
+		const int vertexCnt = col * row;
+		const int cellCnt = (col - 1) * (row - 1);
 
 		graphic::cVertexLayout vtxLayout;
 		vtxLayout.Create(
@@ -34,43 +41,22 @@ bool cCloth::Init(graphic::cRenderer &renderer
 		m_colorOffset = vtxLayout.GetOffset("COLOR");
 		m_vertexStride = vtxLayout.GetVertexSize();
 		m_vtxBuff.Create(renderer, cellCnt * 6, m_vertexStride, D3D11_USAGE_DYNAMIC);
-
-		vector<WORD> indices(cellCnt * 2 * 3);
-		int idx = 0;
-		for (int x = 0; x < num_particles_width0 - 1; x++)
-		{
-			for (int y = 0; y < num_particles_height0 - 1; y++)
-			{
-				// triangle1
-				indices[idx] = idx++;
-				indices[idx] = idx++;
-				indices[idx] = idx++;
-				// triangle2
-				indices[idx] = idx++;
-				indices[idx] = idx++;
-				indices[idx] = idx++;
-			}
-		}
-		m_idxBuff.Create(renderer, cellCnt*2, (BYTE*)&indices[0]);
 	}
-
-	m_num_particles_width = num_particles_width0;
-	m_num_particles_height = num_particles_height0;
 
 	// I am essentially using this vector as an array with room for 
 	// num_particles_width*num_particles_height particles
-	m_particles.resize(num_particles_width0*num_particles_height0);
+	m_particles.resize(col*row);
 
 	// creating particles in a grid of particles from (0,0,0) to (width,-height,0)
-	for (int x = 0; x < num_particles_width0; x++)
+	for (int x = 0; x < col; x++)
 	{
-		for (int y = 0; y < num_particles_height0; y++)
+		for (int y = 0; y < row; y++)
 		{
-			Vector3 pos = Vector3(width * (x / (float)num_particles_width0),
-				(height*1.5f) - height * (y / (float)num_particles_height0),
+			Vector3 pos = Vector3(width * (x / (float)col),
+				(height*1.5f) - height * (y / (float)row),
 				0);
 			// insert particle in column x at y'th row
-			m_particles[y*num_particles_width0 + x] = cParticle(pos);
+			m_particles[y*col + x] = cParticle(pos);
 		}
 	}
 
@@ -88,43 +74,43 @@ bool cCloth::Init(graphic::cRenderer &renderer
 	//
 	// Connecting immediate neighbor particles with constraints (distance 1 and sqrt(2) in the grid)
 	cParticle *p = &m_particles[0];
-	for (int x = 0; x < num_particles_width0; x++)
+	for (int x = 0; x < col; x++)
 	{
-		for (int y = 0; y < num_particles_height0; y++)
+		for (int y = 0; y < row; y++)
 		{
-			cParticle *p1 = p + y * m_num_particles_width + x;
-			cParticle *p2 = p + y * m_num_particles_width + x + 1;
-			cParticle *p3 = p + (y + 1) * m_num_particles_width + x;
-			cParticle *p4 = p + (y + 1) * m_num_particles_width + x + 1;
+			cParticle *p1 = p + y * m_col + x;
+			cParticle *p2 = p + y * m_col + x + 1;
+			cParticle *p3 = p + (y + 1) * m_col + x;
+			cParticle *p4 = p + (y + 1) * m_col + x + 1;
 
-			if (x < num_particles_width0 - 1)
+			if (x < col - 1)
 				MakeConstraint(p1, p2);
-			if (y < num_particles_height0 - 1)
+			if (y < row - 1)
 				MakeConstraint(p1, p3);
-			if (x < num_particles_width0 - 1 && y < num_particles_height0 - 1)
+			if (x < col - 1 && y < row - 1)
 				MakeConstraint(p1, p4);
-			if (x < num_particles_width0 - 1 && y < num_particles_height0 - 1)
+			if (x < col - 1 && y < row - 1)
 				MakeConstraint(p2, p3);
 		}
 	}
 
 	// Connecting secondary neighbors with constraints (distance 2 and sqrt(4) in the grid)
-	for (int x = 0; x < num_particles_width0; x++)
+	for (int x = 0; x < col; x++)
 	{
-		for (int y = 0; y < num_particles_height0; y++)
+		for (int y = 0; y < row; y++)
 		{
-			cParticle *p1 = p + y * m_num_particles_width + x;
-			cParticle *p2 = p + y * m_num_particles_width + x + 2;
-			cParticle *p3 = p + (y + 2) * m_num_particles_width + x;
-			cParticle *p4 = p + (y + 2) * m_num_particles_width + x + 2;
+			cParticle *p1 = p + y * m_col + x;
+			cParticle *p2 = p + y * m_col + x + 2;
+			cParticle *p3 = p + (y + 2) * m_col + x;
+			cParticle *p4 = p + (y + 2) * m_col + x + 2;
 
-			if (x < num_particles_width0 - 2)
+			if (x < col - 2)
 				MakeConstraint(p1, p2);
-			if (y < num_particles_height0 - 2)
+			if (y < row - 2)
 				MakeConstraint(p1, p3);
-			if (x < num_particles_width0 - 2 && y < num_particles_height0 - 2)
+			if (x < col - 2 && y < row - 2)
 				MakeConstraint(p1, p4);
-			if (x < num_particles_width0 - 2 && y < num_particles_height0 - 2)
+			if (x < col - 2 && y < row - 2)
 				MakeConstraint(p2, p3);
 		}
 	}
@@ -140,7 +126,36 @@ bool cCloth::Init(graphic::cRenderer &renderer
 		// moving the particle a bit towards the center, to make it hang more natural 
 		// - because I like it ;)
 		GetParticle(0 + i, 0)->OffsetPos(Vector3(-0.5, 0.0, 0.0));
-		GetParticle(num_particles_width0 - 1 - i, 0)->MakeUnmovable();
+		GetParticle(col - 1 - i, 0)->MakeUnmovable();
+	}
+
+	// create triangle index array
+	// The cloth is seen as consisting of triangles for four particles in the grid as follows:
+	//
+	// (x,y)   *--* (x+1,y)
+	// 		   | /|
+	// 		   |/ |
+	// (x,y+1) *--* (x+1,y+1)
+	//
+	//    (p1) *--* (p2,p4)
+	//         | /|
+	//         |/ |
+	// (p3,p6) *--* (p4,p5)
+	{
+		const int cellCnt = (col - 1) * (row - 1);
+		m_indices.reserve(cellCnt * 2 * 3);
+		for (int x = 0; x < col - 1; x++)
+		{
+			for (int y = 0; y < row - 1; y++)
+			{
+				m_indices.push_back(y * col + x); // p1
+				m_indices.push_back(y * col + x + 1); // p2
+				m_indices.push_back((y + 1) * col + x); // p3
+				m_indices.push_back(y * col + x + 1); // p4
+				m_indices.push_back((y + 1) * col + x + 1); // p5
+				m_indices.push_back((y + 1) * col + x); // p6
+			}
+		}
 	}
 
 	return true;
@@ -149,18 +164,6 @@ bool cCloth::Init(graphic::cRenderer &renderer
 
 // drawing the cloth as a smooth shaded (and colored according to column) OpenGL triangular mesh
 // Called from the display() method
-// The cloth is seen as consisting of triangles for four particles in the grid as follows:
-//
-// (x,y)   *--* (x+1,y)
-// 		   | /|
-// 		   |/ |
-// (x,y+1) *--* (x+1,y+1)
-//
-//    (p1) *--* (p2,p4)
-//         | /|
-//         |/ |
-// (p3,p6) *--* (p4,p5)
-//
 void cCloth::DrawShaded(graphic::cRenderer &renderer)
 {
 	// reset normals (which where written to last frame)
@@ -174,54 +177,35 @@ void cCloth::DrawShaded(graphic::cRenderer &renderer)
 	// all the (hard) triangle normals that each particle is part of
 	{
 		cParticle *p = &m_particles[0];
-		for (int x = 0; x < m_num_particles_width - 1; x++)
+		WORD *i = &m_indices[0];
+		for (uint k = 0; k < m_indices.size(); k+=3, i+=3)
 		{
-			for (int y = 0; y < m_num_particles_height - 1; y++)
-			{
-				cParticle *p1 = p + y * m_num_particles_width + x;
-				cParticle *p2 = p + y * m_num_particles_width + x + 1;
-				cParticle *p3 = p + (y + 1) * m_num_particles_width + x;
-				Vector3 normal = CalcTriangleNormal(p1, p2, p3).Normal();
-				p1->m_accumulated_normal += normal;
-				p2->m_accumulated_normal += normal;
-				p3->m_accumulated_normal += normal;
-
-				cParticle *p4 = p + y * m_num_particles_width + x + 1;
-				cParticle *p5 = p + (y + 1) * m_num_particles_width + x + 1;
-				cParticle *p6 = p + (y + 1) * m_num_particles_width + x;
-				Vector3 normal2 = CalcTriangleNormal(p4, p5, p6).Normal();
-				p4->m_accumulated_normal += normal2;
-				p5->m_accumulated_normal += normal2;
-				p6->m_accumulated_normal += normal2;
-			}
+			cParticle *p1 = p + *(i + 0);
+			cParticle *p2 = p + *(i + 1);
+			cParticle *p3 = p + *(i + 2);
+			Vector3 normal = CalcTriangleNormal(p1, p2, p3).Normal();
+			p1->m_accumulated_normal += normal;
+			p2->m_accumulated_normal += normal;
+			p3->m_accumulated_normal += normal;
 		}
 	}
 
 	if (BYTE *pb = (BYTE*)m_vtxBuff.Lock(renderer))
 	{
 		cParticle *p = &m_particles[0];
-		for (int x = 0; x < m_num_particles_width - 1; x++)
+		WORD *i = &m_indices[0];
+		for (uint k = 0; k < m_indices.size(); k += 3, i += 3)
 		{
-			for (int y = 0; y < m_num_particles_height - 1; y++)
-			{
-				Vector3 color(0, 0, 0);
-				if (x % 2) // red and white color is interleaved according to which column number
-					color = Vector3(0.6f, 0.2f, 0.2f);
-				else
-					color = Vector3(1.0f, 1.0f, 1.0f);
-
-				cParticle *p1 = p + y * m_num_particles_width + x;
-				cParticle *p2 = p + y * m_num_particles_width + x + 1;
-				cParticle *p3 = p + (y + 1) * m_num_particles_width + x;
-				cParticle *p4 = p + y * m_num_particles_width + x + 1;
-				cParticle *p5 = p + (y + 1) * m_num_particles_width + x + 1;
-				cParticle *p6 = p + (y + 1) * m_num_particles_width + x;
-
-				DrawTriangle(pb, p1, p2, p3, color);
-				pb += (m_vertexStride * 3);
-				DrawTriangle(pb, p4, p5, p6, color);
-				pb += (m_vertexStride * 3);
-			}
+			cParticle *p1 = p + *(i + 0);
+			cParticle *p2 = p + *(i + 1);
+			cParticle *p3 = p + *(i + 2);
+			Vector3 color(0, 0, 0);
+			if ((k / (m_row-1) / 6) % 2) // red and white color is interleaved according to which column number
+				color = Vector3(0.6f, 0.2f, 0.2f);
+			else
+				color = Vector3(1.0f, 1.0f, 1.0f);
+			DrawTriangle(pb, p1, p2, p3, color);
+			pb += (m_vertexStride * 3);
 		}
 	}
 	m_vtxBuff.Unlock(renderer);
@@ -252,28 +236,29 @@ void cCloth::DrawShaded(graphic::cRenderer &renderer)
 		renderer.m_cbMaterial.Update(renderer, 2);
 
 		m_vtxBuff.Bind(renderer);
-		m_idxBuff.Bind(renderer);
 		renderer.GetDevContext()->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		renderer.GetDevContext()->DrawIndexed(m_idxBuff.GetFaceCount() * 3, 0, 0);
+		renderer.GetDevContext()->Draw(m_vtxBuff.GetVertexCount(), 0);
 	}
 }
 
 
 // this is an important methods where the time is progressed one time step for the entire cloth.
 // This includes calling satisfyConstraint() for every constraint, 
-// and calling timeStep() for all particles
-void cCloth::TimeStep()
+// and calling TimeStep() for all particles
+void cCloth::TimeStep(const float deltaSeconds)
 {
-	for (int i = 0; i < CONSTRAINT_ITERATIONS; i++) // iterate over all constraints several times
+	// iterate over all constraints several times
+	for (int i = 0; i < m_iterationCount; i++)
 	{
 		cConstraint *p = &m_constraints[0];
 		for (uint i=0; i < m_constraints.size(); ++i)
-			p++->SatisfyConstraint(); // satisfy constraint.
+			p++->SatisfyConstraint();
 	}
 
+	// calculate the position of each particle at the next time step.
 	cParticle *p = &m_particles[0];
 	for (uint i=0; i < m_particles.size(); ++i)
-		p++->TimeStep(); // calculate the position of each particle at the next time step.
+		p++->TimeStep(deltaSeconds);
 }
 
 
@@ -288,32 +273,16 @@ void cCloth::AddForce(const Vector3 &direction)
 
 // used to add wind forces to all particles, is added for each triangle since 
 // the final force is proportional to the triangle area as seen from the wind direction
-// (x,y)   *--* (x+1,y)
-// 		   | /|
-// 		   |/ |
-// (x,y+1) *--* (x+1,y+1)
-//
-//    (p1) *--* (p2,p4)
-//         | /|
-//         |/ |
-// (p3,p6) *--* (p4,p5)
 void cCloth::WindForce(const Vector3 &direction)
 {
 	cParticle *p = &m_particles[0];
-	for (int x = 0; x < m_num_particles_width - 1; x++)
+	WORD *i = &m_indices[0];
+	for (uint k = 0; k < m_indices.size(); k += 3, i += 3)
 	{
-		for (int y = 0; y < m_num_particles_height - 1; y++)
-		{
-			cParticle *p1 = p + y * m_num_particles_width + x;
-			cParticle *p2 = p + y * m_num_particles_width + x + 1;
-			cParticle *p3 = p + (y + 1) * m_num_particles_width + x;
-			cParticle *p4 = p + y * m_num_particles_width + x + 1;
-			cParticle *p5 = p + (y + 1) * m_num_particles_width + x + 1;
-			cParticle *p6 = p + (y + 1) * m_num_particles_width + x;
-
-			AddWindForcesForTriangle(p1, p2, p3, direction);
-			AddWindForcesForTriangle(p4, p5, p6, direction);
-		}
+		cParticle *p1 = p + *(i + 0);
+		cParticle *p2 = p + *(i + 1);
+		cParticle *p3 = p + *(i + 2);
+		AddWindForcesForTriangle(p1, p2, p3, direction);
 	}
 }
 
@@ -347,7 +316,7 @@ void cCloth::DoFrame()
 
 cParticle* cCloth::GetParticle(int x, int y) 
 { 
-	return &m_particles[y*m_num_particles_width + x];
+	return &m_particles[y*m_col + x];
 }
 
 
@@ -411,12 +380,11 @@ void cCloth::DrawTriangle(BYTE *p
 
 int cCloth::GetIndex(int x, int y)
 {
-	return y * m_num_particles_width + x;
+	return y * m_col + x;
 }
 
 
 void cCloth::Clear()
 {
 	m_vtxBuff.Clear();
-	m_idxBuff.Clear();
 }

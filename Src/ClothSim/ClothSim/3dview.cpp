@@ -8,10 +8,12 @@ using namespace framework;
 
 c3DView::c3DView(const string &name)
 	: framework::cDockWindow(name)
-	, m_ballPos(7,11,0)
+	, m_ballPos(7,10.5,0)
 	, m_ballRadius(1.8f)
 	, m_showGrid(true)
 	, m_timeStop(false)
+	, m_timeScale(2.f)
+	, m_forceScale(10.f)
 {
 }
 
@@ -40,7 +42,7 @@ bool c3DView::Init(cRenderer &renderer)
 
 	m_gridLine.Create(renderer, 100, 100, 1, 1);
 
-	m_cloth1.Init(renderer, 14.f, 10.f, 55, 45);
+	m_cloth.Init(renderer, 14.f, 10.f, 55, 45, 10);
 	m_sphere.Create(renderer, m_ballRadius - 0.01f, 30, 30);
 	m_sphere.m_mtrl.Init(
 		Vector4(0.2f, 0.2f, 0.2f, 1)
@@ -74,19 +76,20 @@ void c3DView::OnPreRender(const float deltaSeconds)
 		if (m_showGrid)
 			m_gridLine.Render(renderer);
 
-		const float dt = deltaSeconds * 4.f * (m_timeStop? 0.f : 1.f);
+		// move sphere
 		static float incT = 0.f;
-		incT += dt * 0.2f;
-		m_ballPos.z = (float)cos(incT) * 7.f;
-
+		incT += deltaSeconds * (m_timeStop ? 0.f : 1.f);;
+		m_ballPos.z = (float)cos(incT * 0.8f) * 8.f;
 		m_sphere.m_transform.pos = m_ballPos;
 		m_sphere.Render(renderer);
 
-		m_cloth1.AddForce(Vector3(0, -0.2f, 0) * dt); // add gravity each frame, pointing down
-		m_cloth1.WindForce(Vector3(0.5f, 0, -0.2f) * dt); // generate some wind each frame
-		m_cloth1.TimeStep(); // calculate the particle positions of the next frame
-		m_cloth1.BallCollision(m_ballPos, m_ballRadius); // resolve collision with the ball
-		m_cloth1.DrawShaded(renderer); // finally draw the cloth with smooth shading
+		const float dt = min(0.05f, deltaSeconds * m_timeScale * (m_timeStop? 0.f : 1.f));
+
+		m_cloth.AddForce(Vector3(0, -20.f, 0) * m_forceScale * dt); // add gravity each frame, pointing down
+		m_cloth.WindForce(Vector3(50.f, 0, -20.f) * m_forceScale * dt); // generate some wind each frame
+		m_cloth.TimeStep(dt); // calculate the particle positions of the next frame
+		m_cloth.BallCollision(m_ballPos, m_ballRadius); // resolve collision with the ball
+		m_cloth.DrawShaded(renderer); // finally draw the cloth with smooth shading
 
 		renderer.RenderAxis();
 		renderer.GetDevContext()->RSSetState(states.CullCounterClockwise());
@@ -118,6 +121,9 @@ void c3DView::OnRender(const float deltaSeconds)
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Checkbox("grid", &m_showGrid);
+		ImGui::DragInt("Iteration", &m_cloth.m_iterationCount, 1, 2, 100);
+		ImGui::DragFloat("TimeScale", &m_timeScale, 0.01f, 0.f, 100.f);
+		ImGui::DragFloat("ForceScale", &m_forceScale, 0.01f, 0.f, 100.f);
 		ImGui::End();
 	}
 
@@ -181,6 +187,8 @@ void c3DView::OnMouseMove(const POINT mousePt)
 {
 	const POINT delta = { mousePt.x - m_mousePos.x, mousePt.y - m_mousePos.y };
 	m_mousePos = mousePt;
+	if (ImGui::IsMouseHoveringRect(ImVec2(-1000, -1000), ImVec2(1000, 200), false))
+		return;
 
 	if (m_mouseDown[0])
 	{

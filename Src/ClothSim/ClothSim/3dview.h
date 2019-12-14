@@ -33,9 +33,11 @@ public:
 	graphic::cGridLine m_gridLine;
 	graphic::cSphere m_sphere;
 
-	cCloth m_cloth1;
+	cCloth m_cloth;
 	Vector3 m_ballPos;
 	float m_ballRadius;
+	float m_timeScale;
+	float m_forceScale;
 
 	bool m_timeStop;
 	bool m_showGrid;

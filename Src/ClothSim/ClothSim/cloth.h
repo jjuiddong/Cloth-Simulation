@@ -15,9 +15,9 @@ public:
 	virtual ~cCloth();
 
 	bool Init(graphic::cRenderer &renderer
-		, float width, float height, int num_particles_width0, int num_particles_height0);
+		, float width, float height, int col, int row, int iterationCount);
 	void DrawShaded(graphic::cRenderer &renderer);
-	void TimeStep();
+	void TimeStep(const float deltaSeconds);
 	void AddForce(const Vector3 &direction);
 	void WindForce(const Vector3 &direction);
 	void BallCollision(const Vector3 &center, const float radius);
@@ -36,18 +36,20 @@ protected:
 	int GetIndex(int x, int y);
 
 
-private:
-	// total number of particles is m_num_particles_width * m_num_particles_height
-	int m_num_particles_width; // number of particles in "width" direction
-	int m_num_particles_height; // number of particles in "height" direction
-
+public:
+	// total number of particles is col * row
+	int m_col; // number of particles in "width" direction
+	int m_row; // number of particles in "height" direction
 	vector<cParticle> m_particles; // all particles that are part of this cloth
 	vector<cConstraint> m_constraints; // alle constraints between particles as part of this cloth
+	vector<WORD> m_indices; // triangle index array
+
+	// how many iterations of constraint satisfaction each frame (more is rigid, less is soft)
+	int m_iterationCount;
 
 	int m_posOffset;
 	int m_normOffset;
 	int m_colorOffset;
 	int m_vertexStride;
 	graphic::cVertexBuffer m_vtxBuff;
-	graphic::cIndexBuffer m_idxBuff;
 };

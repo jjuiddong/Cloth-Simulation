@@ -19,7 +19,7 @@ public:
 	cParticle();
 
 	void AddForce(const Vector3 &f);
-	void TimeStep();
+	void TimeStep(const float deltaSeconds);
 	void OffsetPos(const Vector3 &v);
 	void MakeUnmovable();
 
