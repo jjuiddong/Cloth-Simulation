@@ -1,9 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="clothsim.cpp" />
+    <ClCompile Include="clothsimcomputeshader.cpp" />
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="3dview.cpp" />
     <ClCompile Include="cloth\cloth.cpp">
       <Filter>cloth</Filter>
     </ClCompile>
@@ -13,10 +12,10 @@
     <ClCompile Include="cloth\particle.cpp">
       <Filter>cloth</Filter>
     </ClCompile>
+    <ClCompile Include="3dview.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="3dview.h" />
     <ClInclude Include="cloth\cloth.h">
       <Filter>cloth</Filter>
     </ClInclude>
@@ -26,10 +25,19 @@
     <ClInclude Include="cloth\particle.h">
       <Filter>cloth</Filter>
     </ClInclude>
+    <ClInclude Include="3dview.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cloth">
-      <UniqueIdentifier>{3ac2d291-0540-4134-81c5-1c93f38fb8cb}</UniqueIdentifier>
+      <UniqueIdentifier>{5b0df722-d7ca-490b-a03b-6b2485bce70f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shader">
+      <UniqueIdentifier>{e4989d5b-7e57-4cbe-adb1-121d30e42302}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="shader\cloth.fx">
+      <Filter>shader</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

@@ -352,3 +352,6 @@ Package/errlog.txt
 Package/log.txt
 Package/ClothSimd.exe
 Package/imgui.ini
+Package/ClothSim.exe
+Package/ClothSimComputeShader.exe
+Package/output.txt

@@ -20,9 +20,9 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{BC500212-5B64-4684-B49A-80F272075484}</ProjectGuid>
+    <ProjectGuid>{375B1607-DDF8-4AC1-ADAC-7FCD64B7ED15}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>ClothSim</RootNamespace>
+    <RootNamespace>ClothSimComputeShader</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -74,7 +74,6 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)../../Package/</OutDir>
     <IntDir>$(SolutionDir)../Obj/$(ProjectName)/$(Configuration)/</IntDir>
-    <TargetName>$(ProjectName)d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -94,8 +93,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;USE_D3D11_MATH;_ITERATOR_DEBUG_LEVEL=0;_HAS_ITERATOR_DEBUGGING=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>../../../../Common/Framework11/external/sfml/include/;../../../../Common/Framework11/external/sfml/src/;../../../../Common/Framework11/external/imgui/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -125,8 +124,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;USE_D3D11_MATH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>../../../../Common/Framework11/external/sfml/include/;../../../../Common/Framework11/external/sfml/src/;../../../../Common/Framework11/external/imgui/;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -155,7 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="3dview.cpp" />
-    <ClCompile Include="clothsim.cpp" />
+    <ClCompile Include="clothsimcomputeshader.cpp" />
     <ClCompile Include="cloth\cloth.cpp" />
     <ClCompile Include="cloth\constraint.cpp" />
     <ClCompile Include="cloth\particle.cpp" />
@@ -163,6 +162,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="3dview.h" />
+    <ClInclude Include="cloth\cloth.h" />
+    <ClInclude Include="cloth\constraint.h" />
+    <ClInclude Include="cloth\particle.h" />
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Common\Common\Common.vcxproj">
@@ -179,11 +185,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="3dview.h" />
-    <ClInclude Include="cloth\cloth.h" />
-    <ClInclude Include="cloth\constraint.h" />
-    <ClInclude Include="cloth\particle.h" />
-    <ClInclude Include="stdafx.h" />
+    <CustomBuild Include="shader\cloth.fx">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">fxc /Fc /Od /Gfp /Zi /T fx_5_0 /Fo "$(OutDir)%(Filename).fxo" "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">fxc /Fc /Gfp /Zi /T fx_5_0 /Fo "$(OutDir)%(Filename).fxo" "%(FullPath)"</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">fxc compile for debug: %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir)%(Filename).fxo</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">fxc compile for debug: %(FullPath)</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir)%(Filename).fxo</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

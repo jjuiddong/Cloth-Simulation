@@ -210,7 +210,7 @@ void cCloth::DrawShaded(graphic::cRenderer &renderer)
 	}
 	m_vtxBuff.Unlock(renderer);
 
-
+	// d3d11 render
 	{
 		using namespace graphic;
 		cShader11 *shader = renderer.m_shaderMgr.FindShader(

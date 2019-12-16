@@ -49,6 +49,7 @@ bool c3DView::Init(cRenderer &renderer)
 		, Vector4(0.4f, 0.4f, 1.f, 1)
 		, Vector4(1, 1, 1, 1));
 
+
 	return true;
 }
 
@@ -87,9 +88,9 @@ void c3DView::OnPreRender(const float deltaSeconds)
 		const float dt = min(0.05f, deltaSeconds * m_timeScale * (m_timeStop? 0.f : 1.f));
 
 		m_cloth.AddForce(Vector3(0, -20.f, 0) * m_forceScale * dt); // add gravity each frame, pointing down
-		m_cloth.WindForce(Vector3(50.f, 0, -20.f) * m_forceScale * dt); // generate some wind each frame
-		m_cloth.TimeStep(dt); // calculate the particle positions of the next frame
-		m_cloth.BallCollision(m_ballPos, m_ballRadius); // resolve collision with the ball
+		//m_cloth.WindForce(Vector3(50.f, 0, -20.f) * m_forceScale * dt); // generate some wind each frame
+		m_cloth.TimeStep(renderer, dt); // calculate the particle positions of the next frame
+		//m_cloth.BallCollision(m_ballPos, m_ballRadius); // resolve collision with the ball
 		m_cloth.DrawShaded(renderer); // finally draw the cloth with smooth shading
 
 		renderer.RenderAxis();
