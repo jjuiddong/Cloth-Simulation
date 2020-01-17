@@ -43,6 +43,7 @@ bool c3DView::Init(cRenderer &renderer)
 	m_gridLine.Create(renderer, 100, 100, 1, 1);
 
 	m_cloth.Init(renderer, 14.f, 10.f, 55, 45, 10);
+	//m_cloth.Init(renderer, 14.f, 10.f, 10, 10, 10);
 	m_sphere.Create(renderer, m_ballRadius - 0.01f, 30, 30);
 	m_sphere.m_mtrl.Init(
 		Vector4(0.2f, 0.2f, 0.2f, 1)

@@ -23,12 +23,6 @@ struct sConstraints
 	float rest_distance;
 };
 
-struct sConstraints2
-{
-	int p1;
-	int p2;
-};
-
 
 // SatisfyConstraint Process
 struct sParticle1
@@ -41,6 +35,20 @@ struct sParticle1
 	Vector4 acceleration;
 	Vector4 accumulated_normal;
 };
+
+
+struct sConstraints2
+{
+	uint p2;
+	float rest_distance;
+};
+
+struct sParticleConstraints
+{
+	uint count;
+	sConstraints2 p2s[8]; // constraints p2 particle index
+};
+
 
 
 class cCloth
@@ -91,9 +99,11 @@ public:
 
 	// compute shader optimize
 	graphic::cShader11 m_shader; // compute shader
-	graphic::cShareBuffer m_contraintsBuff; // compute shader input buffer
-	graphic::cShareBuffer m_particleBuff;
-	graphic::cShareBuffer m_resultBuff;
-	graphic::cShareBuffer m_copyBuff;
+	graphic::cResourceBuffer m_contraintsBuff; // compute shader input buffer
+	graphic::cResourceBuffer m_particlConstBuff;
+	graphic::cResourceBuffer m_particleBuff;
+	graphic::cResourceBuffer m_resultBuff;
+	graphic::cResourceBuffer m_copyBuff;
 	graphic::cConstantBuffer<sCBClothParameter> m_cbParameter;
+
 };

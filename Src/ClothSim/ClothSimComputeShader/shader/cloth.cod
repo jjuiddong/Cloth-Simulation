@@ -10,9 +10,10 @@ cbuffer cb0 : register(b6)
 }
 
 //
-// 4 local object(s)
+// 5 local object(s)
 //
 StructuredBuffer g_constraints;
+StructuredBuffer g_particleConsts;
 StructuredBuffer g_particles;
 StructuredBuffer g_particles2;
 RWStructuredBuffer g_out1;
@@ -113,41 +114,41 @@ fxgroup
                 // Initial variable locations:
                 //   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
                 //
-                #line 50 "c:\Project\Cloth-Simulation\Src\ClothSim\ClothSimComputeShader\shader\cloth.fx"
+                #line 58 "c:\Project\Cloth-Simulation\Src\ClothSim\ClothSimComputeShader\shader\cloth.fx"
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(0), t0.xxxx  // r0.x <- movable
                 
-                #line 51
+                #line 59
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.y, vThreadID.x, l(4), t0.xxxx  // r0.y <- mass
                 
-                #line 52
+                #line 60
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.x, vThreadID.x, l(40), t0.xxxx  // r1.x <- acceleration.x
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.y, vThreadID.x, l(44), t0.xxxx  // r1.y <- acceleration.y
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.z, vThreadID.x, l(48), t0.xxxx  // r1.z <- acceleration.z
                 
-                #line 54
+                #line 62
                 itof r0.z, l(0)
                 lt r0.z, r0.z, r0.x
                 if_nz r0.z
                 
-                #line 55
+                #line 63
                   div r2.xyz, cb6[1].xyzx, r0.yyyy
                   add r1.xyz, r1.xyzx, r2.xyzx
                 endif 
                 
-                #line 57
+                #line 65
                 store_structured u0.x, vThreadID.x, l(0), r0.x
                 
-                #line 58
+                #line 66
                 store_structured u0.x, vThreadID.x, l(4), r0.y
                 
-                #line 59
+                #line 67
                 itof r0.x, l(0)
                 store_structured u0.x, vThreadID.x, l(40), r1.x
                 store_structured u0.x, vThreadID.x, l(44), r1.y
                 store_structured u0.x, vThreadID.x, l(48), r1.z
                 store_structured u0.x, vThreadID.x, l(52), r0.x
                 
-                #line 60
+                #line 68
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(8), t0.xxxx
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.y, vThreadID.x, l(12), t0.xxxx
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.z, vThreadID.x, l(16), t0.xxxx
@@ -157,7 +158,7 @@ fxgroup
                 store_structured u0.x, vThreadID.x, l(16), r0.z
                 store_structured u0.x, vThreadID.x, l(20), r0.w
                 
-                #line 61
+                #line 69
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(24), t0.xxxx
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.y, vThreadID.x, l(28), t0.xxxx
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.z, vThreadID.x, l(32), t0.xxxx
@@ -167,7 +168,7 @@ fxgroup
                 store_structured u0.x, vThreadID.x, l(32), r0.z
                 store_structured u0.x, vThreadID.x, l(36), r0.w
                 
-                #line 62
+                #line 70
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(56), t0.xxxx
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.y, vThreadID.x, l(60), t0.xxxx
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.z, vThreadID.x, l(64), t0.xxxx
@@ -177,7 +178,7 @@ fxgroup
                 store_structured u0.x, vThreadID.x, l(64), r0.z
                 store_structured u0.x, vThreadID.x, l(68), r0.w
                 
-                #line 63
+                #line 71
                 ret 
                 // Approximately 43 instruction slots used
                             
@@ -202,17 +203,23 @@ fxgroup
                 //
                 // Buffer Definitions: 
                 //
-                // Resource bind info for g_constraints
+                // Resource bind info for g_particleConsts
                 // {
                 //
-                //   struct sConstraints
+                //   struct sParticleConstrains
                 //   {
                 //       
-                //       int p1;                        // Offset:    0
-                //       int p2;                        // Offset:    4
-                //       float rest_distance;           // Offset:    8
+                //       uint count;                    // Offset:    0
+                //       
+                //       struct sConstraints2
+                //       {
+                //           
+                //           uint p2;                   // Offset:    4
+                //           float rest_distance;       // Offset:    8
                 //
-                //   } $Element;                        // Offset:    0 Size:    12
+                //       } p2s[8];                      // Offset:    4
+                //
+                //   } $Element;                        // Offset:    0 Size:    68
                 //
                 // }
                 //
@@ -255,7 +262,7 @@ fxgroup
                 //
                 // Name                                 Type  Format         Dim      HLSL Bind  Count
                 // ------------------------------ ---------- ------- ----------- -------------- ------
-                // g_constraints                     texture  struct         r/o             t0      1 
+                // g_particleConsts                  texture  struct         r/o             t0      1 
                 // g_particles                       texture  struct         r/o             t1      1 
                 // g_out1                                UAV  struct         r/w             u0      1 
                 //
@@ -274,7 +281,7 @@ fxgroup
                 // no Output
                 cs_5_0
                 dcl_globalFlags refactoringAllowed | skipOptimization
-                dcl_resource_structured t0, 12
+                dcl_resource_structured t0, 68
                 dcl_resource_structured t1, 72
                 dcl_uav_structured u0, 72
                 dcl_input vThreadID.x
@@ -284,78 +291,107 @@ fxgroup
                 // Initial variable locations:
                 //   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
                 //
-                #line 72 "c:\Project\Cloth-Simulation\Src\ClothSim\ClothSimComputeShader\shader\cloth.fx"
-                ld_structured_indexable(structured_buffer, stride=12)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(0), t0.xxxx  // r0.x <- i1
-                
-                #line 73
-                ld_structured_indexable(structured_buffer, stride=12)(mixed,mixed,mixed,mixed) r0.y, vThreadID.x, l(4), t0.xxxx  // r0.y <- i2
-                
-                #line 74
-                ld_structured_indexable(structured_buffer, stride=12)(mixed,mixed,mixed,mixed) r0.z, vThreadID.x, l(8), t0.xxxx  // r0.z <- rest_distance
-                
-                #line 76
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.w, r0.x, l(0), t1.xxxx  // r0.w <- movable1
-                
-                #line 77
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.x, r0.y, l(0), t1.xxxx  // r1.x <- movable2
-                
-                #line 78
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r2.x, r0.x, l(8), t1.xxxx  // r2.x <- pos1.x
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r2.y, r0.x, l(12), t1.xxxx  // r2.y <- pos1.y
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r2.z, r0.x, l(16), t1.xxxx  // r2.z <- pos1.z
-                
-                #line 79
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r3.x, r0.y, l(8), t1.xxxx  // r3.x <- pos2.x
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r3.y, r0.y, l(12), t1.xxxx  // r3.y <- pos2.y
-                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r3.z, r0.y, l(16), t1.xxxx  // r3.z <- pos2.z
+                #line 80 "c:\Project\Cloth-Simulation\Src\ClothSim\ClothSimComputeShader\shader\cloth.fx"
+                mov r0.x, vThreadID.x  // r0.x <- i1
                 
                 #line 81
-                mov r1.yzw, -r2.xxyz
-                add r1.yzw, r1.yyzw, r3.xxyz  // r1.y <- p1_to_p2.x; r1.z <- p1_to_p2.y; r1.w <- p1_to_p2.z
+                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.y, r0.x, l(0), t1.xxxx  // r0.y <- movable1
                 
                 #line 82
-                dp3 r2.w, r1.yzwy, r1.yzwy
-                sqrt r2.w, r2.w  // r2.w <- current_distance
-                
-                #line 83
-                div r0.z, r0.z, r2.w
-                mov r0.z, -r0.z
-                add r0.z, r0.z, l(1.000000)
-                min r0.z, r0.z, l(1.000000)
-                max r0.z, r0.z, l(0.000000)
-                mul r1.yzw, r0.zzzz, r1.yyzw  // r1.y <- correctionVector.x; r1.z <- correctionVector.y; r1.w <- correctionVector.z
+                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.x, r0.x, l(8), t1.xxxx  // r1.x <- pos1.x
+                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.y, r0.x, l(12), t1.xxxx  // r1.y <- pos1.y
+                ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.z, r0.x, l(16), t1.xxxx  // r1.z <- pos1.z
                 
                 #line 84
-                mul r1.yzw, r1.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r1.y <- correctionVectorHalf.x; r1.z <- correctionVectorHalf.y; r1.w <- correctionVectorHalf.z
+                ld_structured_indexable(structured_buffer, stride=68)(mixed,mixed,mixed,mixed) r0.z, r0.x, l(0), t0.xxxx  // r0.z <- cnt
                 
-                #line 86
-                lt r0.z, l(0.000000), r0.w
-                add r4.xyz, r1.yzwy, r2.xyzx
-                movc r2.xyz, r0.zzzz, r4.xyzx, r2.xyzx  // r2.x <- cpos1.x; r2.y <- cpos1.y; r2.z <- cpos1.z
+                #line 85
+                mov r0.w, l(0)  // r0.w <- i
+                mov r2.xyz, r1.xyzx  // r2.x <- pos1.x; r2.y <- pos1.y; r2.z <- pos1.z
+                mov r1.w, r0.w  // r1.w <- i
+                loop 
+                  ult r2.w, r1.w, r0.z
+                  breakc_z r2.w
                 
                 #line 87
-                lt r0.z, l(0.000000), r1.x
-                mov r1.xyz, -r1.yzwy
-                add r1.xyz, r1.xyzx, r3.xyzx
-                movc r1.xyz, r0.zzzz, r1.xyzx, r3.xyzx  // r1.x <- cpos2.x; r1.y <- cpos2.y; r1.z <- cpos2.z
+                  imul null, r2.w, r1.w, l(8)
+                  iadd r2.w, r2.w, l(4)
+                  ld_structured_indexable(structured_buffer, stride=68)(mixed,mixed,mixed,mixed) r2.w, r0.x, r2.w, t0.xxxx  // r2.w <- i2
+                
+                #line 88
+                  imul null, r3.x, r1.w, l(8)
+                  iadd r3.x, r3.x, l(8)
+                  ld_structured_indexable(structured_buffer, stride=68)(mixed,mixed,mixed,mixed) r3.x, r0.x, r3.x, t0.xxxx  // r3.x <- rest_distance
+                
+                #line 91
+                  ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r4.x, r2.w, l(8), t1.xxxx  // r4.x <- pos2.x
+                  ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r4.y, r2.w, l(12), t1.xxxx  // r4.y <- pos2.y
+                  ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r4.z, r2.w, l(16), t1.xxxx  // r4.z <- pos2.z
                 
                 #line 93
-                itof r0.z, l(0)
-                store_structured u0.x, r0.x, l(8), r2.x
-                store_structured u0.x, r0.x, l(12), r2.y
-                store_structured u0.x, r0.x, l(16), r2.z
-                store_structured u0.x, r0.x, l(20), r0.z
+                  mov r3.yzw, -r2.xxyz
+                  add r3.yzw, r3.yyzw, r4.xxyz  // r3.y <- p1_to_p2.x; r3.z <- p1_to_p2.y; r3.w <- p1_to_p2.z
                 
                 #line 94
-                itof r0.x, l(0)
-                store_structured u0.x, r0.y, l(8), r1.x
-                store_structured u0.x, r0.y, l(12), r1.y
-                store_structured u0.x, r0.y, l(16), r1.z
-                store_structured u0.x, r0.y, l(20), r0.x
+                  itof r2.w, l(0)
+                  itof r4.x, l(1)
+                  dp3 r4.y, r3.yzwy, r3.yzwy
+                  sqrt r4.y, r4.y
+                  min r4.x, r4.y, r4.x
+                  max r2.w, r2.w, r4.x  // r2.w <- current_distance
+                
+                #line 95
+                  mov r4.x, -r3.x
+                  max r4.x, r3.x, r4.x
+                  div r2.w, r4.x, r2.w
+                  mov r2.w, -r2.w
+                  add r2.w, r2.w, l(1.000000)
+                  mul r3.yzw, r2.wwww, r3.yyzw  // r3.y <- correctionVector.x; r3.z <- correctionVector.y; r3.w <- correctionVector.z
+                
+                #line 97
+                  mul r3.yzw, r3.yyzw, l(0.000000, 0.500000, 0.500000, 0.500000)  // r3.y <- correctionVectorHalf.x; r3.z <- correctionVectorHalf.y; r3.w <- correctionVectorHalf.z
+                
+                #line 100
+                  lt r2.w, l(0.000000), r0.y
+                  if_nz r2.w
+                
+                #line 102
+                    itof r2.w, l(0)
+                    lt r2.w, r2.w, r3.x
+                    if_nz r2.w
+                
+                #line 103
+                      mul r4.xyz, r3.yzwy, l(0.000010, 0.000010, 0.000010, 0.000000)
+                      add r2.xyz, r2.xyzx, r4.xyzx
+                    else   // Prior locations: r4.z <- pos2.z
                 
                 #line 105
+                      mul r3.xyz, r3.yzwy, l(0.000010, 0.000010, 0.000010, 0.000000)
+                      mov r3.xyz, -r3.xyzx
+                      add r2.xyz, r2.xyzx, r3.xyzx
+                    endif 
+                
+                #line 106
+                  endif 
+                
+                #line 107
+                  mov r2.xyz, r2.xyzx  // r2.x <- cpos1.x; r2.y <- cpos1.y; r2.z <- cpos1.z
+                
+                #line 110
+                  itof r2.w, l(0)
+                  store_structured u0.x, r0.x, l(8), r2.x
+                  store_structured u0.x, r0.x, l(12), r2.y
+                  store_structured u0.x, r0.x, l(16), r2.z
+                  store_structured u0.x, r0.x, l(20), r2.w
+                
+                #line 111
+                  iadd r1.w, r1.w, l(1)
+                  mov r2.xyz, r2.xyzx
+                endloop 
+                
+                #line 148
                 ret 
-                // Approximately 40 instruction slots used
+                // Approximately 59 instruction slots used
                             
             };
             GeometryShader = NULL;
@@ -444,41 +480,41 @@ fxgroup
                 // Initial variable locations:
                 //   vThreadID.x <- DTid.x; vThreadID.y <- DTid.y; vThreadID.z <- DTid.z
                 //
-                #line 114 "c:\Project\Cloth-Simulation\Src\ClothSim\ClothSimComputeShader\shader\cloth.fx"
+                #line 157 "c:\Project\Cloth-Simulation\Src\ClothSim\ClothSimComputeShader\shader\cloth.fx"
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.x, vThreadID.x, l(0), t1.xxxx  // r0.x <- movable
                 
-                #line 115
+                #line 158
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.y, vThreadID.x, l(4), t1.xxxx  // r0.y <- mass
                 
-                #line 116
+                #line 159
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.x, vThreadID.x, l(8), t1.xxxx  // r1.x <- pos.x
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.y, vThreadID.x, l(12), t1.xxxx  // r1.y <- pos.y
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r1.z, vThreadID.x, l(16), t1.xxxx  // r1.z <- pos.z
                 
-                #line 117
+                #line 160
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r2.z, vThreadID.x, l(24), t1.xxxx  // r2.z <- oldPos.x
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r2.x, vThreadID.x, l(28), t1.xxxx  // r2.x <- oldPos.y
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r2.y, vThreadID.x, l(32), t1.xxxx  // r2.y <- oldPos.z
                 
-                #line 118
+                #line 161
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r3.y, vThreadID.x, l(40), t1.xxxx  // r3.y <- acceleration.x
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r3.z, vThreadID.x, l(44), t1.xxxx  // r3.z <- acceleration.y
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r3.x, vThreadID.x, l(48), t1.xxxx  // r3.x <- acceleration.z
                 
-                #line 119
+                #line 162
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.z, vThreadID.x, l(56), t1.xxxx  // r0.z <- accumulated_normal.x
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r0.w, vThreadID.x, l(60), t1.xxxx  // r0.w <- accumulated_normal.y
                 ld_structured_indexable(structured_buffer, stride=72)(mixed,mixed,mixed,mixed) r3.w, vThreadID.x, l(64), t1.xxxx  // r3.w <- accumulated_normal.z
                 
-                #line 123
+                #line 166
                 itof r4.x, l(0)
                 lt r4.x, r4.x, r0.x
                 if_nz r4.x
                 
-                #line 125
+                #line 168
                   mov r4.xyz, r1.xyzx  // r4.x <- temp.x; r4.y <- temp.y; r4.z <- temp.z
                 
-                #line 126
+                #line 169
                   mov r5.xyz, -r2.zxyz
                   add r5.xyz, r1.xyzx, r5.xyzx
                   mul r5.xyz, r5.xyzx, l(0.990000, 0.990000, 0.990000, 0.000000)
@@ -487,13 +523,13 @@ fxgroup
                   mul r6.xyz, r6.xyzx, l(0.001000, 0.001000, 0.001000, 0.000000)
                   add r1.xyz, r5.xyzx, r6.xyzx
                 
-                #line 129
+                #line 172
                   mov r2.xyz, r4.yzxy
                 
-                #line 130
+                #line 173
                   itof r3.xyz, l(0, 0, 0, 0)
                 
-                #line 131
+                #line 174
                   mov r1.w, r2.z
                   mov r1.xyzw, r1.xyzw  // r1.w <- oldPos.x
                   mov r2.zw, r3.yyyz  // r2.z <- acceleration.x; r2.w <- acceleration.y
@@ -503,41 +539,41 @@ fxgroup
                   mov r2.zw, r3.yyyz  // r2.z <- acceleration.x; r2.w <- acceleration.y
                 endif 
                 
-                #line 133
+                #line 176
                 store_structured u0.x, vThreadID.x, l(0), r0.x
                 
-                #line 134
+                #line 177
                 store_structured u0.x, vThreadID.x, l(4), r0.y
                 
-                #line 135
+                #line 178
                 itof r0.x, l(0)
                 store_structured u0.x, vThreadID.x, l(8), r1.x
                 store_structured u0.x, vThreadID.x, l(12), r1.y
                 store_structured u0.x, vThreadID.x, l(16), r1.z
                 store_structured u0.x, vThreadID.x, l(20), r0.x
                 
-                #line 136
+                #line 179
                 itof r0.x, l(0)
                 store_structured u0.x, vThreadID.x, l(24), r1.w
                 store_structured u0.x, vThreadID.x, l(28), r2.x
                 store_structured u0.x, vThreadID.x, l(32), r2.y
                 store_structured u0.x, vThreadID.x, l(36), r0.x
                 
-                #line 137
+                #line 180
                 itof r0.x, l(0)
                 store_structured u0.x, vThreadID.x, l(40), r2.z
                 store_structured u0.x, vThreadID.x, l(44), r2.w
                 store_structured u0.x, vThreadID.x, l(48), r3.x
                 store_structured u0.x, vThreadID.x, l(52), r0.x
                 
-                #line 138
+                #line 181
                 itof r0.x, l(0)
                 store_structured u0.x, vThreadID.x, l(56), r0.z
                 store_structured u0.x, vThreadID.x, l(60), r0.w
                 store_structured u0.x, vThreadID.x, l(64), r3.w
                 store_structured u0.x, vThreadID.x, l(68), r0.x
                 
-                #line 139
+                #line 182
                 ret 
                 // Approximately 58 instruction slots used
                             

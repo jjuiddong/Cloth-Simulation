@@ -194,10 +194,36 @@ bool cCloth::Init(graphic::cRenderer &renderer
 	}
 	result = m_particleBuff.Create(renderer, &particles[0], sizeof(sParticle1)
 		, particles.size(), true);
-
-
-	result = m_resultBuff.Create(renderer, nullptr, sizeof(sParticle1), particles.size(), false, true);
+	result = m_resultBuff.Create(renderer, nullptr, sizeof(sParticle1)
+		, particles.size(), false, true);
 	result = m_copyBuff.CreateReadBuffer(renderer, m_resultBuff);
+
+	// initialize particle constraints buffer
+	// to avoid access same buffer
+	vector<sParticleConstraints> particleConstraints(particles.size());
+	for (auto &p : particleConstraints)
+		p.count = 0;
+	for (auto &c : constraints)
+	{
+		auto &p = particleConstraints;
+		const uint count1 = p[c.p1].count;
+		if (count1 < ARRAYSIZE(p[c.p1].p2s))
+		{
+			p[c.p1].p2s[count1].p2 = c.p2;
+			p[c.p1].p2s[count1].rest_distance = c.rest_distance;
+			p[c.p1].count++;
+		}
+
+		const uint count2 = p[c.p2].count;
+		if (count2 < ARRAYSIZE(p[c.p2].p2s))
+		{
+			p[c.p2].p2s[count2].p2 = c.p1;
+			p[c.p2].p2s[count2].rest_distance = -c.rest_distance;
+			p[c.p2].count++;
+		}
+	}
+	result = m_particlConstBuff.Create(renderer, &particleConstraints[0]
+		, sizeof(sParticleConstraints), particleConstraints.size(), true);
 
 	m_cbParameter.Create(renderer);
 
@@ -325,15 +351,15 @@ void cCloth::TimeStep(graphic::cRenderer &renderer, const float deltaSeconds)
 		m_shader.Begin();
 		m_shader.BeginPass(renderer, 0);
 
-		for (int i = 0; i < 15; i++)
+		for (int i = 0; i < 1; i++)
 		{
-			ID3D11ShaderResourceView* srvs[2] = { m_contraintsBuff.m_srv, m_particleBuff.m_srv };
+			ID3D11ShaderResourceView* srvs[2] = { m_particlConstBuff.m_srv, m_particleBuff.m_srv };
 			renderer.GetDevContext()->CSSetShaderResources(0, 2, srvs);
 			ID3D11UnorderedAccessView* uavs[] = { m_resultBuff.m_uav };
 			renderer.GetDevContext()->CSSetUnorderedAccessViews(0, 1, uavs, (UINT*)(&uavs));
 			m_cbParameter.Update(renderer, 6);
 
-			renderer.GetDevContext()->Dispatch(m_constraints.size(), 1, 1);
+			renderer.GetDevContext()->Dispatch(m_particles.size(), 1, 1);
 
 			ID3D11UnorderedAccessView* ppUAViewNULL[1] = { NULL };
 			renderer.GetDevContext()->CSSetUnorderedAccessViews(0, 1

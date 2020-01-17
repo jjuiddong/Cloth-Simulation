@@ -17,12 +17,6 @@ struct sConstraints
 	float rest_distance;
 };
 
-struct sConstraints2
-{
-	int p1;
-	int p2;
-};
-
 // SatisfyConstraint
 struct sParticle1
 {
@@ -35,7 +29,21 @@ struct sParticle1
 };
 
 
+struct sConstraints2
+{
+	uint p2;
+	float rest_distance;
+};
+
+struct sParticleConstrains
+{
+	uint count;
+	sConstraints2 p2s[8];
+};
+
+
 StructuredBuffer<sConstraints> g_constraints : register(t0);
+StructuredBuffer<sParticleConstrains> g_particleConsts : register(t0);
 StructuredBuffer<sParticle1> g_particles : register(t1);
 StructuredBuffer<sParticle1> g_particles2 : register(t0);
 RWStructuredBuffer<sParticle1> g_out1 : register(u0);
@@ -69,39 +77,74 @@ void CS_SatisfyConstraint(uint3 DTid : SV_DispatchThreadID
 	//, uint index : SV_GroupIndex
 )
 {
-	uint i1 = g_constraints[DTid.x].p1;
-	uint i2 = g_constraints[DTid.x].p2;
-	float rest_distance = g_constraints[DTid.x].rest_distance;
-
+	uint i1 = DTid.x;
 	float movable1 = g_particles[i1].movable;
-	float movable2 = g_particles[i2].movable;
 	float3 pos1 = g_particles[i1].pos.xyz;
-	float3 pos2 = g_particles[i2].pos.xyz;
 
-	float3 p1_to_p2 = pos2 - pos1;
-	float current_distance = length(p1_to_p2);
-	float3 correctionVector = p1_to_p2 * max(0.f, min(1.f, (1.f - (rest_distance / current_distance))));
-	float3 correctionVectorHalf = correctionVector * 0.5f;
+	uint cnt = g_particleConsts[i1].count;
+	for (uint i = 0; i < cnt; ++i)
+	{
+		uint i2 = g_particleConsts[i1].p2s[i].p2;
+		float rest_distance = g_particleConsts[i1].p2s[i].rest_distance;
 
-	float3 cpos1 = (movable1 > 0.f) ? (pos1 + correctionVectorHalf) : pos1;
-	float3 cpos2 = (movable2 > 0.f) ? (pos2 - correctionVectorHalf) : pos2;
-	//float3 cpos1 = pos1;
-	//float3 cpos2 = pos2;
+		float movable2 = g_particles[i2].movable;
+		float3 pos2 = g_particles[i2].pos.xyz;
 
-	//g_out1[i1].movable = movable1;
-	//g_out1[i2].movable = movable2;
-	g_out1[i1].pos = float4(cpos1, 0);
-	g_out1[i2].pos = float4(cpos2, 0);
+		float3 p1_to_p2 = pos2 - pos1;
+		float current_distance = max(0, min(1, length(p1_to_p2)));
+		float3 correctionVector = p1_to_p2 * 
+			(1.f - (abs(rest_distance) / current_distance));
+		float3 correctionVectorHalf = correctionVector.xyz * 0.5f;
 
-	//g_out1[i1] = g_particles[i1];
-	//g_out1[i2] = g_particles[i2];
+		//float3 cpos1 = pos1;
+		if (movable1 > 0.f)
+		{
+			if (rest_distance > 0)
+				pos1 += correctionVectorHalf * 0.00001;
+			else
+				pos1 -= correctionVectorHalf * 0.00001;
+		}
+		float3 cpos1 = pos1;
+
+		//float3 cpos2 = (movable2 > 0.f) ? (pos2 - correctionVectorHalf) : pos2;
+		g_out1[i1].pos = float4(cpos1, 0);
+	}
+
+
+	//uint i1 = g_constraints[DTid.x].p1;
+	//uint i2 = g_constraints[DTid.x].p2;
+	//float rest_distance = g_constraints[DTid.x].rest_distance;
+
+	//float movable1 = g_particles[i1].movable;
+	//float movable2 = g_particles[i2].movable;
+	//float3 pos1 = g_particles[i1].pos.xyz;
+	//float3 pos2 = g_particles[i2].pos.xyz;
+
+	//float3 p1_to_p2 = pos2 - pos1;
+	//float current_distance = length(p1_to_p2);
+	//float3 correctionVector = p1_to_p2 * max(0.f, min(1.f, (1.f - (rest_distance / current_distance))));
+	//float3 correctionVectorHalf = correctionVector * 0.5f;
+
+	//float3 cpos1 = (movable1 > 0.f) ? (pos1 + correctionVectorHalf) : pos1;
+	//float3 cpos2 = (movable2 > 0.f) ? (pos2 - correctionVectorHalf) : pos2;
+	////float3 cpos1 = pos1;
+	////float3 cpos2 = pos2;
+
+	////g_out1[i1].movable = movable1;
+	////g_out1[i2].movable = movable2;
+
 	//g_out1[i1].pos = float4(cpos1, 0);
 	//g_out1[i2].pos = float4(cpos2, 0);
 
-	//g_out1[DTid.x].pos = float4(pos, 0);
-	//g_out1[DTid.x].oldPos = float4(oldPos, 0);
-	//g_out1[DTid.x].acceleration = float4(acceleration, 0);
-	//g_out1[DTid.x].accumulated_normal = float4(accumulated_normal, 0);
+	////g_out1[i1] = g_particles[i1];
+	////g_out1[i2] = g_particles[i2];
+	////g_out1[i1].pos = float4(cpos1, 0);
+	////g_out1[i2].pos = float4(cpos2, 0);
+
+	////g_out1[DTid.x].pos = float4(pos, 0);
+	////g_out1[DTid.x].oldPos = float4(oldPos, 0);
+	////g_out1[DTid.x].acceleration = float4(acceleration, 0);
+	////g_out1[DTid.x].accumulated_normal = float4(accumulated_normal, 0);
 }
 
 
